@@ -51,15 +51,40 @@ std::vector<Trade> OrderBook::place_order(Order ord)
 std::vector<Trade> OrderBook::match_buy(Order &incoming)
 {
     std::vector<Trade> trades;
+    while (incoming.qty > 0)
+    {
+        auto best_ask_price = best_ask();
+        if (!best_ask_price.has_value())
+        { // no liquidity
+            break;
+        }
+        if (incoming.price < best_ask_price.value())
+        { // price cannot match
+            break;
+        }
 
-    // TODO:
-    // 1. While incoming.qty > 0:
-    //      - Check best ask (asks_.begin()).
-    //      - If price not matchable → break.
-    //      - Pop from deque, match qty, create Trade, reduce qty.
-    //      - record_trade(t);
-    //      - Remove empty price levels & cleanup order_index_.
-    // 2. Return trades.
+        // there is a match, fill all orders in book
+        auto &queue = asks_[best_ask_price.value()];
+        while (!queue.empty() && incoming.qty > 0)
+        { // match the current order with the best price orders
+            Order &ask_order = queue.front();
+            uint64_t fulfilled_qty = std::min(incoming.qty, ask_order.qty);
+            ask_order.qty -= fulfilled_qty;
+            incoming.qty -= fulfilled_qty;
+            Trade trade{incoming.id, ask_order.id, best_ask_price.value(), fulfilled_qty, std::chrono::system_clock::now()};
+            trades.push_back(trade);
+            record_trade(trade);
+            if (ask_order.qty == 0)
+            { // filled already
+                queue.pop_front();
+                order_index_.erase(ask_order.id);
+            }
+        }
+        if (queue.empty())
+        {
+            asks_.erase(best_ask_price.value());
+        }
+    }
 
     return trades;
 }
@@ -118,23 +143,27 @@ std::string OrderBook::snapshot_top(size_t depth) const
 }
 
 // ------------------------------------------------------------
-// best_bid
+// best_bid, we want to return the largest bid price
 // ------------------------------------------------------------
 std::optional<double> OrderBook::best_bid() const
 {
     std::lock_guard<std::mutex> lock(mu_);
-
-    // TODO: bids_.rbegin()->first if not empty
+    if (!bids_.empty())
+    {
+        return bids_.rbegin()->first;
+    }
     return std::nullopt;
 }
 
 // ------------------------------------------------------------
-// best_ask
+// best_ask, we want to return the lowest asking price
 // ------------------------------------------------------------
 std::optional<double> OrderBook::best_ask() const
 {
     std::lock_guard<std::mutex> lock(mu_);
-
-    // TODO: asks_.begin()->first if not empty
+    if (!asks_.empty())
+    {
+        return asks_.begin()->first;
+    }
     return std::nullopt;
 }
