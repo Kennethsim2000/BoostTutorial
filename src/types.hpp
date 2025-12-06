@@ -31,3 +31,10 @@ struct Trade
     uint64_t qty;
     std::chrono::system_clock::time_point ts;
 };
+
+struct OrderRef
+{
+    Side side;
+    double price;
+    std::deque<Order>::iterator it;
+};

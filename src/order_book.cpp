@@ -1,8 +1,8 @@
-// src/order_book.cpp
 
 #include "order_book.hpp"
-#include <sstream> // for snapshot_top JSON-ish building
-#include <chrono>  // timestamps
+#include <sstream>
+#include <chrono>
+#include "types.hpp"
 
 OrderBook::OrderBook(CSVLogger &logger)
     : logger_(logger)
@@ -20,15 +20,29 @@ void OrderBook::record_trade(const Trade &t)
 std::vector<Trade> OrderBook::place_order(Order ord)
 {
     std::lock_guard<std::mutex> lock(mu_);
+    OrderId order_id = next_order_id_.fetch_add(1);
+    ord.id = order_id;
+    ord.ts = std::chrono::system_clock::now();
+    std::vector<Trade> fulfilled_trades;
+    if (ord.side == Side::Buy)
+    {
+        fulfilled_trades = match_buy(ord);
+    }
+    else
+    {
+        fulfilled_trades = match_sell(ord);
+    }
+    if (ord.qty > 0)
+    {
+        std::map<double, std::deque<Order>> &
+            book = ord.side == Side::Buy ? bids_ : asks_;
+        std::deque<Order> &queue = book[ord.price];
+        queue.push_back(ord);
+        auto it = std::prev(queue.end());
+        order_index_[order_id] = OrderRef{ord.side, ord.price, it};
+    }
 
-    // TODO:
-    // 1. Assign order id if needed.
-    // 2. Based on side, call match_buy() or match_sell().
-    // 3. If remainder qty > 0, insert into bids_ / asks_.
-    // 4. Maintain order_index_.
-    // 5. Return list of trades executed.
-
-    return {};
+    return fulfilled_trades;
 }
 
 // ------------------------------------------------------------

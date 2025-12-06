@@ -45,7 +45,7 @@ private:
 
     // index to locate an order quickly for cancellation:
     // order_id -> (price, side)
-    std::unordered_map<OrderId, std::pair<double, Side>> order_index_;
+    std::unordered_map<OrderId, OrderRef> order_index_;
 
     // mutex protecting all mutable state above
     mutable std::mutex mu_;
