@@ -94,12 +94,46 @@ std::vector<Trade> OrderBook::match_buy(Order &incoming)
 // ------------------------------------------------------------
 std::vector<Trade> OrderBook::match_sell(Order &incoming)
 {
-    std::vector<Trade> trades;
-
     // TODO:
     // Same logic as match_buy but using:
     //   - best bid = bids_.rbegin()
     //   - price condition reversed
+
+    std::vector<Trade> trades;
+    while (incoming.qty > 0)
+    {
+        auto best_bid_price = best_bid();
+        if (!best_bid_price.has_value())
+        { // no liquidity
+            break;
+        }
+        if (incoming.price > best_bid_price.value())
+        { // price cannot match
+            break;
+        }
+
+        // there is a match, fill all orders in book
+        auto &queue = bids_[best_bid_price.value()];
+        while (!queue.empty() && incoming.qty > 0)
+        { // match the current order with the best price orders
+            Order &bid_order = queue.front();
+            uint64_t fulfilled_qty = std::min(incoming.qty, bid_order.qty);
+            bid_order.qty -= fulfilled_qty;
+            incoming.qty -= fulfilled_qty;
+            Trade trade{bid_order.id, incoming.id, best_bid_price.value(), fulfilled_qty, std::chrono::system_clock::now()};
+            trades.push_back(trade);
+            record_trade(trade);
+            if (bid_order.qty == 0)
+            { // filled already
+                queue.pop_front();
+                order_index_.erase(bid_order.id);
+            }
+        }
+        if (queue.empty())
+        {
+            bids_.erase(best_bid_price.value());
+        }
+    }
 
     return trades;
 }
