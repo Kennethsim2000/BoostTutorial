@@ -188,6 +188,8 @@ bool OrderBook::cancel_order(OrderId id)
 std::string OrderBook::snapshot_top(size_t depth) const
 {
     std::lock_guard<std::mutex> lock(mu_);
+    std::ostringstream ss; // is a way to build strings dynamically
+    ss << "{\"bids\": [";
 
     // TODO:
     // Build a simple JSON-like string manually.
@@ -197,9 +199,40 @@ std::string OrderBook::snapshot_top(size_t depth) const
     //   "bids": [ ["price", "qty"], ... ],
     //   "asks": [ ["price", "qty"], ... ]
     // }
+    size_t count = 0;
+    for (auto it = bids_.rbegin(); it != bids_.rend() && count < depth; it++, count++)
+    {
+        double price = it->first;
+        const auto &queue = it->second;
+        uint64_t qty = 0;
+        for (const auto &order : queue)
+        {
+            qty += order.qty;
+        }
+        if (count > 0)
+        {
+            ss << ", ";
+        }
+        ss << "[" << price << "," << qty << "]";
+    }
+    ss << "], \"asks\": [";
+    count = 0;
+    for (auto it = asks_.begin(); it != asks_.end() && count < depth; ++it, ++count)
+    {
+        double price = it->first;
+        const auto &queue = it->second;
 
-    std::ostringstream ss;
-    ss << "{ \"bids\": [], \"asks\": [] }";
+        uint64_t qty = 0;
+        for (const auto &o : queue)
+            qty += o.qty;
+
+        if (count > 0)
+            ss << ", ";
+        ss << "[" << price << ", " << qty << "]";
+    }
+
+    ss << "] }";
+
     return ss.str();
 }
 
