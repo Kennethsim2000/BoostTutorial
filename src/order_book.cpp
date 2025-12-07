@@ -34,9 +34,9 @@ std::vector<Trade> OrderBook::place_order(Order ord)
     }
     if (ord.qty > 0)
     {
-        std::map<double, std::deque<Order>> &
+        std::map<double, std::list<Order>> &
             book = ord.side == Side::Buy ? bids_ : asks_;
-        std::deque<Order> &queue = book[ord.price];
+        std::list<Order> &queue = book[ord.price];
         queue.push_back(ord);
         auto it = std::prev(queue.end());
         order_index_[order_id] = OrderRef{ord.side, ord.price, it};
@@ -144,15 +144,42 @@ std::vector<Trade> OrderBook::match_sell(Order &incoming)
 bool OrderBook::cancel_order(OrderId id)
 {
     std::lock_guard<std::mutex> lock(mu_);
-
-    // TODO:
-    // 1. Look up index: order_index_[id]
-    // 2. Go to (price, side) map → deque at that price.
-    // 3. Locate element by id and erase it.
-    // 4. If deque becomes empty, erase price level.
-    // 5. Remove index entry.
-
-    return false;
+    auto it = order_index_.find(id);
+    if (it == order_index_.end())
+    {
+        return false;
+    }
+    OrderRef &order_ref = it->second;
+    if (order_ref.side == Side::Buy)
+    {
+        auto map_it = bids_.find(order_ref.price);
+        if (map_it == bids_.end())
+        {
+            return false;
+        }
+        auto &queue = map_it->second;
+        queue.erase(order_ref.it);
+        if (queue.empty())
+        {
+            bids_.erase(map_it);
+        }
+    }
+    else
+    {
+        auto map_it = asks_.find(order_ref.price);
+        if (map_it == asks_.end())
+        {
+            return false;
+        }
+        auto &queue = map_it->second;
+        queue.erase(order_ref.it);
+        if (queue.empty())
+        {
+            asks_.erase(map_it);
+        }
+    }
+    order_index_.erase(it);
+    return true;
 }
 
 // ------------------------------------------------------------

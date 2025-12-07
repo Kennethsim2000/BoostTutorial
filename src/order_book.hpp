@@ -9,6 +9,7 @@
 
 #include "types.hpp"
 #include "csv_logger.hpp"
+#include <list>
 
 class OrderBook
 {
@@ -40,8 +41,8 @@ private:
     // Internal data structures:
     // - bids_: map keyed by price ascending; iterate rbegin() for best bid
     // - asks_: map keyed by price ascending; begin() is best ask
-    std::map<double, std::deque<Order>> bids_;
-    std::map<double, std::deque<Order>> asks_;
+    std::map<double, std::list<Order>> bids_;
+    std::map<double, std::list<Order>> asks_;
 
     // index to locate an order quickly for cancellation:
     // order_id -> (price, side)

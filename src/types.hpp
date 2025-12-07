@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <string>
 #include <chrono>
+#include <list>
 
 using OrderId = uint64_t;
 using ClientId = std::string;
@@ -36,5 +37,5 @@ struct OrderRef
 {
     Side side;
     double price;
-    std::deque<Order>::iterator it;
+    std::list<Order>::iterator it;
 };
