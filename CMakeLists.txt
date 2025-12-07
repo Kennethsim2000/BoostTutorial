@@ -4,6 +4,10 @@ project(mini_trader LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BOOST_ROOT "/usr/local/opt/boost")
+set(BOOST_INCLUDEDIR "/usr/local/opt/boost/include")
+set(BOOST_LIBRARYDIR "/usr/local/opt/boost/lib")
+
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 

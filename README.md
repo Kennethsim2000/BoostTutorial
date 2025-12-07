@@ -1,1 +1,4 @@
-cmake --build .
+From the build directory
+cmake ..
+
+make
