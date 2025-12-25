@@ -12,14 +12,13 @@
 
 namespace net
 {
-
+    namespace ba = boost::asio;
     using boost::asio::ip::tcp;
-    using asio = boost::asio;
 
     class TCPServer : public std::enable_shared_from_this<TCPServer>
     {
     public:
-        TCPServer(asio::io_context &ioc, tcp::endpoint endpoint, OrderBook &book);
+        TCPServer(ba::io_context &ioc, tcp::endpoint endpoint, OrderBook &book);
 
         // Start accepting connections
         void run();
@@ -44,8 +43,8 @@ namespace net
             OrderBook &book_;
         };
 
-        asio::io_context &ioc_;
-        tcp::acceptor acceptor_;
+        boost::asio::io_context &ioc_;
+        tcp::acceptor acceptor_; // listens for incoming TCP connection requests on a specific network port
         OrderBook &book_;
     };
 
