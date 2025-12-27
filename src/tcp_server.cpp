@@ -184,7 +184,7 @@ namespace net
         }
         else
         {
-            write_response("ERROR unknwon command\n");
+            write_response("ERROR unknown command\n");
             return;
         }
     }
@@ -226,4 +226,4 @@ namespace net
                                     } });
     }
 
-} // namespace net
+}
