@@ -71,11 +71,6 @@ namespace net
     // ------------------------------------------------------------
     void TCPServer::Session::do_read()
     {
-        // TODO:
-        // async_read_until(socket_, buffer_, '\n', callback)
-        //
-        // callback calls on_read(...)
-        // read until new line
         // Capturing self ensures the Session stays alive until handler completes
         async_read_until(socket_, buffer_, "\n",
                          [this, self = shared_from_this()](boost::system::error_code ec, size_t n)
@@ -134,6 +129,7 @@ namespace net
             if (tokens.size() != 5)
             {
                 write_response("ERROR Invalid ORDER arguments\n");
+                return;
             }
             std::string token_str = tokens.at(1);
             std::transform(token_str.begin(), token_str.end(), token_str.begin(), ::tolower);
@@ -149,12 +145,14 @@ namespace net
             else
             {
                 write_response("ERROR Invalid side provided for ORDER command\n");
+                return;
             }
             double price = stod(tokens.at(2));
             uint64_t qty = stoull(tokens.at(3));
-            if (price < 0 || qty < 0)
+            if (price < 0 || qty == 0)
             {
                 write_response("ERROR Invalid price or quantity provided for ORDER command\n");
+                return;
             }
             ClientId clientId = tokens.at(4);
             Order ord(-1, clientId, side, price, qty, qty, std::chrono::system_clock::now());
@@ -167,6 +165,7 @@ namespace net
             if (tokens.size() != 2)
             {
                 write_response("ERROR invalid CANCEL arguments\n");
+                return;
             }
             OrderId orderId = stoull(tokens.at(1));
             bool ok = book_.cancel_order(orderId);
@@ -177,6 +176,7 @@ namespace net
             if (tokens.size() != 2)
             {
                 write_response("ERROR invalid SNAPSHOT arguments\n");
+                return;
             }
             size_t depth = stoull(tokens.at(1));
             auto json = book_.snapshot_top(depth);
@@ -185,6 +185,7 @@ namespace net
         else
         {
             write_response("ERROR unknwon command\n");
+            return;
         }
     }
 
@@ -214,15 +215,15 @@ namespace net
     // ------------------------------------------------------------
     void TCPServer::Session::write_response(const std::string &resp)
     {
-        // TODO:
-        // Use async_write(socket_, buffer, callback)
-        //
-        // IMPORTANT:
-        // Response must live until async_write finishes.
-        // So wrap in shared_ptr<string>:
-        //
-        // auto out = std::make_shared<std::string>(resp);
-        // async_write(socket_, buffer(*out), [self,out](...) { ... });
+        auto out = std::make_shared<std::string>(resp);
+
+        boost::asio::async_write(socket_, boost::asio::buffer(*out), [this, self = shared_from_this()](boost::system::error_code ec, size_t n)
+                                 { 
+                                    if(ec) {
+                                        std::cerr << "Write error: " << ec.message() << std::endl;
+                                        boost::system::error_code ignored;
+                                        socket_.close(ignored);
+                                    } });
     }
 
 } // namespace net
