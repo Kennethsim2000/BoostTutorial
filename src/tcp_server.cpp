@@ -122,42 +122,91 @@ namespace net
         {
             tokens.push_back(token);
         }
+        if (tokens.empty())
+        {
+            write_response("ERROR empty command\n");
+        }
         std::string command = tokens.at(0);
+        std::transform(command.begin(), command.end(), command.begin(), ::toupper);
+
         if (command == "ORDER")
         {
+            if (tokens.size() != 5)
+            {
+                write_response("ERROR Invalid ORDER arguments\n");
+            }
+            std::string token_str = tokens.at(1);
+            std::transform(token_str.begin(), token_str.end(), token_str.begin(), ::tolower);
+            Side side;
+            if (token_str == "buy")
+            {
+                side = Side::Buy;
+            }
+            else if (token_str == "sell")
+            {
+                side = Side::Sell;
+            }
+            else
+            {
+                write_response("ERROR Invalid side provided for ORDER command\n");
+            }
+            double price = stod(tokens.at(2));
+            uint64_t qty = stoull(tokens.at(3));
+            if (price < 0 || qty < 0)
+            {
+                write_response("ERROR Invalid price or quantity provided for ORDER command\n");
+            }
+            ClientId clientId = tokens.at(4);
+            Order ord(-1, clientId, side, price, qty, qty, std::chrono::system_clock::now());
+            auto trades = book_.place_order(ord);
+            std::string trade_response = formatTrades(trades);
+            write_response(trade_response);
         }
         else if (command == "CANCEL")
         {
+            if (tokens.size() != 2)
+            {
+                write_response("ERROR invalid CANCEL arguments\n");
+            }
+            OrderId orderId = stoull(tokens.at(1));
+            bool ok = book_.cancel_order(orderId);
+            write_response(ok ? "CANCELLED\n" : "NOT_FOUND\n");
         }
         else if (command == "SNAPSHOT")
         {
+            if (tokens.size() != 2)
+            {
+                write_response("ERROR invalid SNAPSHOT arguments\n");
+            }
+            size_t depth = stoull(tokens.at(1));
+            auto json = book_.snapshot_top(depth);
+            write_response(json + "\n");
         }
         else
         {
             write_response("ERROR unknwon command\n");
         }
-        // HINTS:
-        // 1. Tokenize using std::istringstream iss(line)
-        // 2. Read first word → command
-        // 3. if ORDER:
-        //       parse "side price qty client"
-        //       build Order ord;
-        //       auto trades = book_.place_order(...)
-        //       format a response string summarizing trades
-        //       write_response(resp);
-        //
-        //    if CANCEL:
-        //       parse id
-        //       bool ok = book_.cancel_order(id)
-        //       write_response(ok?"CANCELLED\n":"NOT_FOUND\n");
-        //
-        //    if SNAPSHOT:
-        //       parse depth
-        //       auto json = book_.snapshot_top(depth)
-        //       write_response(json + "\n");
-        //
-        //    else:
-        //       write_response("ERROR unknown\n");
+    }
+
+    std::string formatTrades(const std::vector<Trade> &trades)
+    {
+        std::ostringstream oss;
+
+        oss << "--- Trade List ---\n";
+        for (size_t i = 0; i < trades.size(); ++i)
+        {
+            const auto &trade = trades[i];
+            auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(trade.ts.time_since_epoch()).count();
+
+            oss << "Trade " << i + 1 << ":\n";
+            oss << "  BuyOrder: " << trade.buy_order << "\n";
+            oss << "  SellOrder: " << trade.sell_order << "\n";
+            oss << "  Price: $" << trade.price << "\n";
+            oss << "  Quantity: " << trade.qty << "\n";
+            oss << "  Timestamp: " << ms << "\n";
+        }
+        oss << "--- End of List ---\n";
+        return oss.str();
     }
 
     // ------------------------------------------------------------

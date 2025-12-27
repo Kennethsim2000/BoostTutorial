@@ -191,14 +191,6 @@ std::string OrderBook::snapshot_top(size_t depth) const
     std::ostringstream ss; // is a way to build strings dynamically
     ss << "{\"bids\": [";
 
-    // TODO:
-    // Build a simple JSON-like string manually.
-    // Something like:
-    //
-    // {
-    //   "bids": [ ["price", "qty"], ... ],
-    //   "asks": [ ["price", "qty"], ... ]
-    // }
     size_t count = 0;
     for (auto it = bids_.rbegin(); it != bids_.rend() && count < depth; it++, count++)
     {
