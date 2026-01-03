@@ -13,7 +13,7 @@ namespace net
           acceptor_(ioc, endpoint), // acceptor typically created using the io_context and tcp::endpoint
           book_(book)
     {
-        std::cout << "TCP server created" << std::endl;
+        std::cout << "[DEBUG] TCP server created" << std::endl;
     }
 
     // ------------------------------------------------------------
@@ -37,6 +37,7 @@ namespace net
             {
                 if (!ec)
                 {
+                    std::cout << "[DEBUG] New client accepted from: " << socket.remote_endpoint().address().to_string() << ":" << socket.remote_endpoint().port() << std::endl;
                     auto session = std::make_shared<Session>(std::move(socket), book_);
                     session->start();
                 }
@@ -53,6 +54,7 @@ namespace net
         : socket_(std::move(socket)),
           book_(book)
     {
+        std::cout << "[DEBUG] Session created" << std::endl;
     }
 
     // ------------------------------------------------------------
@@ -61,7 +63,7 @@ namespace net
     void TCPServer::Session::start()
     {
         do_read();
-        std::cout << "Client connected from: "
+        std::cout << "[DEBUG] Session starting with client  "
                   << socket_.remote_endpoint().address().to_string()
                   << ":" << socket_.remote_endpoint().port() << std::endl;
     }
@@ -89,18 +91,21 @@ namespace net
         {
             if (ec == boost::asio::error::eof)
             {
+                std::cout << "[DEBUG] Client disconnected" << std::endl;
                 if (socket_.is_open())
                     socket_.close();
             }
             else
             {
-                std::cerr << "Read error: " << ec.message() << std::endl;
+                std::cerr << "[ERROR] on_read:" << ec.message() << std::endl;
             }
             return;
         }
+        std::cout << "[DEBUG] Received" << bytes_transferred << "bytes from client" << std::endl;
         std::istream is(&buffer_);
         std::string line;
         std::getline(is, line);
+        std::cout << "[DEBUG] Processing line: " << line << std::endl;
         process_line(line);
         do_read();
     }
@@ -220,9 +225,11 @@ namespace net
         boost::asio::async_write(socket_, boost::asio::buffer(*out), [this, self = shared_from_this()](boost::system::error_code ec, size_t n)
                                  { 
                                     if(ec) {
-                                        std::cerr << "Write error: " << ec.message() << std::endl;
+                                        std::cerr << "[ERROR] Write failed: " << ec.message() << std::endl;
                                         boost::system::error_code ignored;
                                         socket_.close(ignored);
+                                    } else {
+                                        std::cout << "[DEBUG] sent " << n << " bytes to client" << std::endl;
                                     } });
     }
 

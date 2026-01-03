@@ -41,6 +41,7 @@ int main()
     // If single-threaded:
     // io.run();
     server.run();
+    io.run();
 
     // -------------------------------
     // TODO 6: Clean shutdown (optional)
