@@ -12,13 +12,12 @@
 
 namespace net
 {
-    namespace ba = boost::asio;
     using boost::asio::ip::tcp;
 
     class TCPServer : public std::enable_shared_from_this<TCPServer>
     {
     public:
-        TCPServer(ba::io_context &ioc, tcp::endpoint endpoint, OrderBook &book);
+        TCPServer(boost::asio::io_context &ioc, tcp::endpoint endpoint, OrderBook &book);
 
         // Start accepting connections
         void run();
@@ -39,7 +38,7 @@ namespace net
             void write_response(const std::string &resp);
 
             tcp::socket socket_;
-            boost::asio::streambuf buffer_;
+            boost::asio::streambuf buffer_; // dynamic resizable buffer designed for handling input and output streams
             OrderBook &book_;
         };
 

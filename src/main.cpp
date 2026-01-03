@@ -1,51 +1,27 @@
 #include "order_book.hpp"
 #include "csv_logger.hpp"
-// #include "tcp_server.hpp"   // <-- you'll include this once you create tcp_server.cpp
+#include "tcp_server.hpp"
 
 #include <boost/asio.hpp>
 #include <memory>
 #include <thread>
 
+using boost::asio::ip::tcp;
+using net::TCPServer;
+
 int main()
 {
     // -------------------------------
-    // TODO 1: Create OrderBook object
+    // Create OrderBook object
     // -------------------------------
-    // - Stack or heap? Up to you.
-    // - If heap, use std::make_shared<OrderBook>() so tcp_server can share it.
-    //
-    // Example:
-    // auto order_book = std::make_shared<OrderBook>();
+    CSVLogger logger("fills.csv");
+    auto order_book = OrderBook(logger);
+    boost::asio::io_context io;
 
     // -------------------------------
-    // TODO 2: Create CSVLogger object
+    // Create TCP server
     // -------------------------------
-    // - You need the file path, e.g. "fills.csv".
-    // - The OrderBook will call logger->log_fill(...) when trades occur.
-    //
-    // Example:
-    // CSVLogger logger("fills.csv");
-
-    // -------------------------------
-    // TODO 3: Initialize Boost ASIO
-    // -------------------------------
-    // - Create io_context.
-    // - You may also want a thread pool (2–4 threads).
-    //
-    // Example:
-    // boost::asio::io_context io;
-
-    // -------------------------------
-    // TODO 4: Create TCP server
-    // -------------------------------
-    // - Pass:
-    //   (1) io_context
-    //   (2) shared OrderBook*
-    //   (3) pointer/reference to CSVLogger
-    //
-    // Example:
-    // TCPServer server(io, order_book, &logger);
-    // server.start_accept();
+    TCPServer server(io, tcp::endpoint(tcp::v4(), 12345), order_book);
 
     // -------------------------------
     // TODO 5: Run io_context
@@ -64,6 +40,7 @@ int main()
     //
     // If single-threaded:
     // io.run();
+    server.run();
 
     // -------------------------------
     // TODO 6: Clean shutdown (optional)

@@ -22,6 +22,9 @@ struct Order
     uint64_t qty;
     uint64_t original_qty;
     std::chrono::system_clock::time_point ts;
+
+    Order(OrderId id_, ClientId client_, Side side_, double price_, uint64_t qty_, uint64_t original_qty_, std::chrono::system_clock::time_point ts_)
+        : id(id_), client(client_), side(side_), price(price_), qty(qty_), original_qty(original_qty_), ts(ts_) {}
 };
 
 struct Trade
