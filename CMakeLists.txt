@@ -11,7 +11,7 @@ set(BOOST_LIBRARYDIR "/usr/local/opt/boost/lib")
 find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
-add_executable(mini_trader src/main.cpp)
+add_executable(mini_trader src/main.cpp src/order_book.cpp src/tcp_server.cpp) #important to add the other cpp files for linking
 
 target_include_directories(mini_trader PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(mini_trader PRIVATE ${Boost_LIBRARIES} Threads::Threads)
