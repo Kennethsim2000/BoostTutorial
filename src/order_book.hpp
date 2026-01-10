@@ -14,8 +14,6 @@
 class OrderBook
 {
 public:
-    // Construct with a reference to a CSVLogger (non-owning).
-    // The caller is responsible for keeping the logger alive while OrderBook is used.
     explicit OrderBook(CSVLogger &logger);
 
     // Place an order into the book. The order may execute immediately (partial/full)
@@ -28,7 +26,6 @@ public:
     // Return a small JSON-ish snapshot of the top `depth` price levels for debugging/REST.
     std::string snapshot_top(size_t depth = 5) const;
 
-    // Optional: expose best bid/ask (price) if needed by UI/tests. Returns std::nullopt if none.
     std::optional<double> best_bid() const;
     std::optional<double> best_ask() const;
 
@@ -48,13 +45,10 @@ private:
     // order_id -> (price, side)
     std::unordered_map<OrderId, OrderRef> order_index_;
 
-    // mutex protecting all mutable state above
     mutable std::mutex mu_;
 
-    // Logger (non-owning reference)
     CSVLogger &logger_;
 
-    // Optional: internal id generator (if you want the OrderBook to assign ids)
     std::atomic<OrderId> next_order_id_{1};
 
     // Internal helper: record trade (calls logger_)

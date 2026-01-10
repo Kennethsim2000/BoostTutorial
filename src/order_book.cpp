@@ -67,7 +67,7 @@ std::vector<Trade> OrderBook::match_buy(Order &incoming)
         auto &queue = asks_[best_ask_price.value()];
         while (!queue.empty() && incoming.qty > 0)
         { // match the current order with the best price orders
-            Order &ask_order = queue.front();
+            Order ask_order = queue.front();
             uint64_t fulfilled_qty = std::min(incoming.qty, ask_order.qty);
             ask_order.qty -= fulfilled_qty;
             incoming.qty -= fulfilled_qty;
@@ -116,7 +116,7 @@ std::vector<Trade> OrderBook::match_sell(Order &incoming)
         auto &queue = bids_[best_bid_price.value()];
         while (!queue.empty() && incoming.qty > 0)
         { // match the current order with the best price orders
-            Order &bid_order = queue.front();
+            Order bid_order = queue.front();
             uint64_t fulfilled_qty = std::min(incoming.qty, bid_order.qty);
             bid_order.qty -= fulfilled_qty;
             incoming.qty -= fulfilled_qty;
