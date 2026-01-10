@@ -3,6 +3,7 @@
 #include <sstream>
 #include <chrono>
 #include "types.hpp"
+#include <iostream>
 
 OrderBook::OrderBook(CSVLogger &logger)
     : logger_(logger)
@@ -19,11 +20,11 @@ void OrderBook::record_trade(const Trade &t)
 // ------------------------------------------------------------
 std::vector<Trade> OrderBook::place_order(Order ord)
 {
-    std::lock_guard<std::mutex> lock(mu_);
     OrderId order_id = next_order_id_.fetch_add(1);
     ord.id = order_id;
     ord.ts = std::chrono::system_clock::now();
     std::vector<Trade> fulfilled_trades;
+    std::lock_guard<std::mutex> lock(mu_);
     if (ord.side == Side::Buy)
     {
         fulfilled_trades = match_buy(ord);
@@ -233,7 +234,6 @@ std::string OrderBook::snapshot_top(size_t depth) const
 // ------------------------------------------------------------
 std::optional<double> OrderBook::best_bid() const
 {
-    std::lock_guard<std::mutex> lock(mu_);
     if (!bids_.empty())
     {
         return bids_.rbegin()->first;
@@ -246,7 +246,6 @@ std::optional<double> OrderBook::best_bid() const
 // ------------------------------------------------------------
 std::optional<double> OrderBook::best_ask() const
 {
-    std::lock_guard<std::mutex> lock(mu_);
     if (!asks_.empty())
     {
         return asks_.begin()->first;
