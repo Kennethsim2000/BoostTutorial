@@ -121,11 +121,11 @@ namespace net
             auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(trade.ts.time_since_epoch()).count();
 
             oss << "Trade " << i + 1 << ":\n";
-            oss << "  BuyOrder: " << trade.buy_order << "\n";
-            oss << "  SellOrder: " << trade.sell_order << "\n";
-            oss << "  Price: $" << trade.price << "\n";
-            oss << "  Quantity: " << trade.qty << "\n";
-            oss << "  Timestamp: " << ms << "\n";
+            oss << "BuyOrder: " << trade.buy_order << "\n";
+            oss << "SellOrder: " << trade.sell_order << "\n";
+            oss << "Price: $" << trade.price << "\n";
+            oss << "Quantity: " << trade.qty << "\n";
+            oss << "Timestamp: " << ms << "\n";
         }
         oss << "--- End of List ---\n";
         return oss.str();
