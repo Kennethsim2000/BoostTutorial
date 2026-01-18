@@ -8,6 +8,7 @@
 #include "csv_logger.hpp"
 #include "types.hpp"
 #include <filesystem>
+#include <numeric>
 
 // ----------------------------------------------------------------------------
 // Test Fixture for OrderBook
@@ -79,25 +80,35 @@ TEST_F(OrderBookTest, FullMatchBuyOrder)
 
 TEST_F(OrderBookTest, PartialMatchBuyOrder)
 {
-    Order sell_order = Order(1, "testclient", Side::Sell, 50.00, 50, 100, std::chrono::system_clock::now());
+    Order sell_order = Order(1, "testclient", Side::Sell, 50.00, 50, 50, std::chrono::system_clock::now());
     Order buy_order = Order(2, "testclient2", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
     std::vector<Trade> sell_trades = book_->place_order(sell_order);
     std::vector<Trade> buy_trades = book_->place_order(buy_order);
     EXPECT_EQ(buy_trades.size(), 1);
     EXPECT_EQ(book_->best_bid(), 50);
     EXPECT_EQ(book_->best_ask(), std::nullopt);
-
-    // TODO: Verify remaining 50 buy quantity stays in book
+    EXPECT_EQ(book_->get_qty(50.00, Side::Buy), 50);
 }
 
 TEST_F(OrderBookTest, MultiplePartialMatches)
 {
-    // Test: One order matches against multiple orders at same price
-    // TODO: Place 3 sell orders at $50 (e.g., 30, 40, 50 shares)
-    // TODO: Place 1 buy order for 100 shares @ $50
-    // TODO: Verify 3 trades were created
-    // TODO: Verify total traded quantity = 100
-    // TODO: Verify remaining 20 shares stay as sell order
+    Order sell_order1 = Order(1, "testclient", Side::Sell, 50.00, 30, 30, std::chrono::system_clock::now());
+    Order sell_order2 = Order(2, "testclient", Side::Sell, 50.00, 40, 40, std::chrono::system_clock::now());
+    Order sell_order3 = Order(3, "testclient", Side::Sell, 50.00, 50, 50, std::chrono::system_clock::now());
+    std::vector<Trade> sell_trade1 = book_->place_order(sell_order1);
+    std::vector<Trade> sell_trade2 = book_->place_order(sell_order2);
+    std::vector<Trade> sell_trade3 = book_->place_order(sell_order3);
+    Order buy_order = Order(4, "testclient2", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> buy_trade = book_->place_order(buy_order);
+    EXPECT_EQ(buy_trade.size(), 3);
+    EXPECT_EQ(book_->get_qty(50.00, Side::Sell), 20);
+
+    uint64_t total_qty_traded = std::accumulate(buy_trade.begin(), buy_trade.end(), uint64_t{0},
+                                                [](auto sum, const Trade &t)
+                                                {
+                                                    return sum + t.qty;
+                                                });
+    EXPECT_EQ(total_qty_traded, 100);
 }
 
 TEST_F(OrderBookTest, PriceTimePriority)
