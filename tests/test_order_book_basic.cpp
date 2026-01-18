@@ -49,12 +49,14 @@ TEST_F(OrderBookTest, PlaceSimpleBuyOrder)
 
 TEST_F(OrderBookTest, PlaceSimpleSellOrder)
 {
-    // Test: Placing a sell order with no matching buy orders
-    // TODO: Create a sell order (e.g., Sell 100 shares @ $51.00)
-    // TODO: Call book_->place_order(order)
-    // TODO: Verify the returned trades vector is empty
-    // TODO: Verify best_ask() returns the correct price
-    // TODO: Verify best_bid() is nullopt
+    Order sell_order = Order(1, "testclient", Side::Sell, 51.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> trades = book_->place_order(sell_order);
+    EXPECT_TRUE(trades.empty());
+    std::optional<double> best_bid = book_->best_bid();
+    std::optional<double> best_ask = book_->best_ask();
+    EXPECT_TRUE(best_ask.has_value());
+    EXPECT_EQ(51.0, best_ask.value());
+    EXPECT_EQ(std::nullopt, best_bid);
 }
 
 // ----------------------------------------------------------------------------
@@ -63,23 +65,29 @@ TEST_F(OrderBookTest, PlaceSimpleSellOrder)
 
 TEST_F(OrderBookTest, FullMatchBuyOrder)
 {
-    // Test: Buy order completely matches with existing sell order
-    // TODO: Place a sell order first (e.g., Sell 100 @ $50)
-    // TODO: Place a buy order that matches (e.g., Buy 100 @ $50)
-    // TODO: Verify exactly 1 trade was created
-    // TODO: Verify trade quantity = 100
-    // TODO: Verify trade price = $50
-    // TODO: Verify both best_bid() and best_ask() are nullopt (book is empty)
+    Order sell_order = Order(1, "testclient", Side::Sell, 50.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> trades_sell = book_->place_order(sell_order);
+    Order buy_order = Order(2, "testclient2", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> trades_buy = book_->place_order(buy_order);
+    EXPECT_EQ(trades_buy.size(), 1);
+    Trade trade = trades_buy.at(0);
+    EXPECT_EQ(trade.qty, 100);
+    EXPECT_EQ(trade.price, 50);
+    EXPECT_EQ(book_->best_bid(), std::nullopt);
+    EXPECT_EQ(book_->best_ask(), std::nullopt);
 }
 
 TEST_F(OrderBookTest, PartialMatchBuyOrder)
 {
-    // Test: Buy order partially fills against smaller sell order
-    // TODO: Place sell order (e.g., Sell 50 @ $50)
-    // TODO: Place buy order (e.g., Buy 100 @ $50)
-    // TODO: Verify 1 trade for quantity 50
+    Order sell_order = Order(1, "testclient", Side::Sell, 50.00, 50, 100, std::chrono::system_clock::now());
+    Order buy_order = Order(2, "testclient2", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> sell_trades = book_->place_order(sell_order);
+    std::vector<Trade> buy_trades = book_->place_order(buy_order);
+    EXPECT_EQ(buy_trades.size(), 1);
+    EXPECT_EQ(book_->best_bid(), 50);
+    EXPECT_EQ(book_->best_ask(), std::nullopt);
+
     // TODO: Verify remaining 50 buy quantity stays in book
-    // TODO: Verify best_bid() = $50, best_ask() = nullopt
 }
 
 TEST_F(OrderBookTest, MultiplePartialMatches)
