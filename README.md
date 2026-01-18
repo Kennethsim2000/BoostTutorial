@@ -11,6 +11,20 @@ cmake ..
 make
 ```
 
+To run the TCP Server:
+
+```bash
+cd build
+./mini_trader
+```
+
+To run the tests:
+
+```bash
+cd build/tests
+./test_basic
+```
+
 ## Examples
 
 ### Example 1: Full Match (Buy ↔ Sell)
