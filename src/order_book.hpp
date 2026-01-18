@@ -29,6 +29,8 @@ public:
     std::optional<double> best_bid() const;
     std::optional<double> best_ask() const;
 
+    uint64_t get_qty(double price, Side side) const;
+
 private:
     // Helper matching functions (internal). They mutate the incoming Order and
     // generate trades which are returned to the caller.

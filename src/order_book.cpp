@@ -4,6 +4,7 @@
 #include <chrono>
 #include "types.hpp"
 #include <iostream>
+#include <numeric>
 
 OrderBook::OrderBook(CSVLogger &logger)
     : logger_(logger)
@@ -251,4 +252,19 @@ std::optional<double> OrderBook::best_ask() const
         return asks_.begin()->first;
     }
     return std::nullopt;
+}
+
+uint64_t OrderBook::get_qty(double price, Side side) const
+{
+    const auto &book = side == Side::Buy ? bids_ : asks_;
+    auto it = book.find(price);
+    if (it == book.end())
+    {
+        return 0;
+    }
+    return std::accumulate(it->second.begin(), it->second.end(), uint64_t{0},
+                           [](uint64_t sum, const Order &o)
+                           {
+                               return sum + o.qty;
+                           });
 }
