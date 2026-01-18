@@ -111,19 +111,21 @@ TEST_F(OrderBookTest, MultiplePartialMatches)
     EXPECT_EQ(total_qty_traded, 100);
 }
 
-TEST_F(OrderBookTest, PriceTimePriority)
-{
-    // Test: Orders at same price execute in FIFO order
-    // TODO: Place sell order 1: Sell 50 @ $50, client "Alice"
-    // TODO: Place sell order 2: Sell 50 @ $50, client "Bob"
-    // TODO: Place buy order: Buy 60 @ $50
-    // TODO: Verify Alice's order filled completely (50 shares)
-    // TODO: Verify Bob's order filled partially (10 shares)
-    // TODO: Verify Bob has 40 shares remaining in book
-}
-
 TEST_F(OrderBookTest, PriceLevelMatching)
 {
+    Order sell_order1 = Order(1, "testclient", Side::Sell, 50.00, 50, 50, std::chrono::system_clock::now());
+    Order sell_order2 = Order(2, "testclient", Side::Sell, 51.00, 50, 50, std::chrono::system_clock::now());
+    Order sell_order3 = Order(3, "testclient", Side::Sell, 52.00, 50, 50, std::chrono::system_clock::now());
+    std::vector<Trade> sell_trade1 = book_->place_order(sell_order1);
+    std::vector<Trade> sell_trade2 = book_->place_order(sell_order2);
+    std::vector<Trade> sell_trade3 = book_->place_order(sell_order3);
+    Order buy_order = Order(4, "testclient2", Side::Buy, 52.00, 150, 150, std::chrono::system_clock::now());
+    std::vector<Trade> buy_trade = book_->place_order(buy_order);
+    EXPECT_EQ(buy_trade.size(), 3);
+    EXPECT_EQ(buy_trade.at(0).price, 50.00);
+    EXPECT_EQ(buy_trade.at(1).price, 51.00);
+    EXPECT_EQ(buy_trade.at(2).price, 52.00);
+
     // Test: Orders match across multiple price levels
     // TODO: Place sell orders at different prices: $50, $51, $52
     // TODO: Place buy order @ $52 (willing to pay up to $52)
