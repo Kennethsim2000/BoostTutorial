@@ -17,19 +17,18 @@ class OrderBookTest : public ::testing::Test
 protected:
     void SetUp() override
     {
-        // TODO: Initialize a CSVLogger with a test file
-        // TODO: Initialize an OrderBook instance
-        // Hint: Use a temporary filename like "test_trades_basic.csv"
+        logger_ = new CSVLogger{"test_trades_basic.csv"};
+        book_ = new OrderBook{*logger_};
     }
 
     void TearDown() override
     {
-        // TODO: Clean up test CSV files
-        // Hint: Use std::filesystem::remove() to delete test files
+        delete book_;
+        delete logger_;
+        std::filesystem::remove("test_trades_basic.csv");
     }
-
-    // TODO: Declare CSVLogger* logger_;
-    // TODO: Declare OrderBook* book_;
+    CSVLogger *logger_;
+    OrderBook *book_;
 };
 
 // ----------------------------------------------------------------------------
@@ -38,12 +37,14 @@ protected:
 
 TEST_F(OrderBookTest, PlaceSimpleBuyOrder)
 {
-    // Test: Placing a buy order with no matching sell orders
-    // TODO: Create a buy order (e.g., Buy 100 shares @ $50.00)
-    // TODO: Call book_->place_order(order)
-    // TODO: Verify the returned trades vector is empty
-    // TODO: Verify best_bid() returns the correct price
-    // TODO: Verify best_ask() is nullopt (no sell orders)
+    Order buy_order = Order(1, "testclient", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
+    std::vector<Trade> trades = book_->place_order(buy_order);
+    EXPECT_TRUE(trades.empty());
+    std::optional<double> best_bid = book_->best_bid();
+    EXPECT_TRUE(best_bid.has_value());
+    EXPECT_EQ(50.0, best_bid.value());
+    std::optional<double> best_ask = book_->best_ask();
+    EXPECT_EQ(std::nullopt, best_ask);
 }
 
 TEST_F(OrderBookTest, PlaceSimpleSellOrder)
