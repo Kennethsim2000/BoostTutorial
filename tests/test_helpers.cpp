@@ -18,16 +18,13 @@ Order CreateSellOrder(double price, uint64_t qty, const std::string &client)
     return Order(-1, client, Side::Sell, price, qty, qty, std::chrono::system_clock::now());
 }
 
-// Helper: Verify trade matches expected values
 void VerifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell,
                  double expected_price, uint64_t expected_qty)
 {
-    // TODO: Use EXPECT_EQ for each field
-    // EXPECT_EQ(trade.buy_order, expected_buy);
-    // EXPECT_EQ(trade.sell_order, expected_sell);
-    // EXPECT_EQ(trade.price, expected_price);
-    // EXPECT_EQ(trade.qty, expected_qty);
     EXPECT_EQ(trade.buy_order, expected_buy);
+    EXPECT_EQ(trade.sell_order, expected_sell);
+    EXPECT_EQ(trade.price, expected_price);
+    EXPECT_EQ(trade.qty, expected_qty);
 }
 
 // Helper: Count lines in CSV file
