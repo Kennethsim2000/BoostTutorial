@@ -27,10 +27,8 @@ void verifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell
     EXPECT_EQ(trade.qty, expected_qty);
 }
 
-// Helper: Count lines in CSV file
 int countCSVLines(const std::string &filename)
 {
-    // TODO: Open file, count lines, return count
     std::ifstream file(filename);
     int count = 0;
     std::string line;
@@ -44,19 +42,38 @@ int countCSVLines(const std::string &filename)
 // Helper: Parse CSV line into Trade struct
 Trade parseCSVLine(const std::string &line)
 {
-    // TODO: Split by comma, parse fields, return Trade
-    // This is more complex - you'll need to parse:
-    // timestamp,buy_order,sell_order,price,qty
-    Trade t;
-    // Implementation left for practice
+    std::istringstream sstream(line);
+    std::string attribute;
+    std::vector<std::string> vec;
+    while (std::getline(sstream, attribute, ','))
+    {
+        vec.push_back(attribute);
+    }
+    if (vec.size() < 5)
+    {
+        throw new std::invalid_argument("Invalid CSV line: expected 5 fields");
+    }
+    long long ms = std::stoll(vec.at(0));
+    std::chrono::milliseconds dur(ms);
+    std::chrono::system_clock::time_point time = std::chrono::system_clock::time_point(dur);
+    OrderId buy_order = stoull(vec.at(1));
+    OrderId sell_order = stoull(vec.at(2));
+    double price = stod(vec.at(3));
+    uint64_t qty = stoull(vec.at(4));
+    Trade t(buy_order, sell_order, price, qty, time);
     return t;
 }
 
 // Helper: Read entire CSV file into vector of trades
 std::vector<Trade> readAllTrades(const std::string &filename)
 {
-    // TODO: Open file, skip header, parse each line
     std::vector<Trade> trades;
-    // Implementation left for practice
+    std::ifstream file(filename);
+    std::string line;
+    while (std::getline(file, line))
+    {
+        Trade t = parseCSVLine(line);
+        trades.push_back(t);
+    }
     return trades;
 }

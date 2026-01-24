@@ -34,6 +34,8 @@ struct Trade
     double price;
     uint64_t qty;
     std::chrono::system_clock::time_point ts;
+
+    Trade(OrderId buy_order_, OrderId sell_order_, double price_, uint64_t qty_, std::chrono::system_clock::time_point ts_) : buy_order(buy_order_), sell_order(sell_order_), price(price_), qty(qty_), ts(ts_) {}
 };
 
 struct OrderRef
