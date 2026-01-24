@@ -10,15 +10,11 @@
 
 Order CreateBuyOrder(double price, uint64_t qty, const std::string &client)
 {
-    // TODO: Return an Order with side = Buy
-    // Hint: Order(id, client, Side::Buy, price, qty, qty, timestamp)
     return Order(-1, client, Side::Buy, price, qty, qty, std::chrono::system_clock::now());
 }
 
-// Helper: Create a standard sell order
 Order CreateSellOrder(double price, uint64_t qty, const std::string &client)
 {
-    // TODO: Return an Order with side = Sell
     return Order(-1, client, Side::Sell, price, qty, qty, std::chrono::system_clock::now());
 }
 
