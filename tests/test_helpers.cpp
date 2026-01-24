@@ -3,13 +3,12 @@
 // Helper functions for all tests
 // ============================================================================
 
-#include "types.hpp"
 #include <gtest/gtest.h>
 #include <fstream>
 #include <sstream>
+#include "test_helpers.hpp"
 
-// Helper: Create a standard buy order
-Order CreateBuyOrder(double price, uint64_t qty, const std::string &client = "TestClient")
+Order CreateBuyOrder(double price, uint64_t qty, const std::string &client)
 {
     // TODO: Return an Order with side = Buy
     // Hint: Order(id, client, Side::Buy, price, qty, qty, timestamp)
@@ -17,7 +16,7 @@ Order CreateBuyOrder(double price, uint64_t qty, const std::string &client = "Te
 }
 
 // Helper: Create a standard sell order
-Order CreateSellOrder(double price, uint64_t qty, const std::string &client = "TestClient")
+Order CreateSellOrder(double price, uint64_t qty, const std::string &client)
 {
     // TODO: Return an Order with side = Sell
     return Order(-1, client, Side::Sell, price, qty, qty, std::chrono::system_clock::now());
@@ -32,6 +31,7 @@ void VerifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell
     // EXPECT_EQ(trade.sell_order, expected_sell);
     // EXPECT_EQ(trade.price, expected_price);
     // EXPECT_EQ(trade.qty, expected_qty);
+    EXPECT_EQ(trade.buy_order, expected_buy);
 }
 
 // Helper: Count lines in CSV file

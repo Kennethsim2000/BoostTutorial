@@ -9,6 +9,7 @@
 #include "types.hpp"
 #include <filesystem>
 #include <numeric>
+#include "test_helpers.hpp"
 
 // ----------------------------------------------------------------------------
 // Test Fixture for OrderBook
@@ -38,7 +39,8 @@ protected:
 
 TEST_F(OrderBookTest, PlaceSimpleBuyOrder)
 {
-    Order buy_order = Order(1, "testclient", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
+    Order buy_order = CreateBuyOrder(50.00, 100);
+    // Order buy_order = Order(1, "testclient", Side::Buy, 50.00, 100, 100, std::chrono::system_clock::now());
     std::vector<Trade> trades = book_->place_order(buy_order);
     EXPECT_TRUE(trades.empty());
     std::optional<double> best_bid = book_->best_bid();
