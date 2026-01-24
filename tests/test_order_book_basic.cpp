@@ -39,7 +39,7 @@ protected:
 
 TEST_F(OrderBookTest, PlaceSimpleBuyOrder)
 {
-    Order buy_order = CreateBuyOrder(50.00, 100);
+    Order buy_order = createBuyOrder(50.00, 100);
     std::vector<Trade> trades = book_->place_order(buy_order);
     EXPECT_TRUE(trades.empty());
     std::optional<double> best_bid = book_->best_bid();
@@ -51,7 +51,7 @@ TEST_F(OrderBookTest, PlaceSimpleBuyOrder)
 
 TEST_F(OrderBookTest, PlaceSimpleSellOrder)
 {
-    Order sell_order = CreateSellOrder(51.00, 100);
+    Order sell_order = createSellOrder(51.00, 100);
     std::vector<Trade> trades = book_->place_order(sell_order);
     EXPECT_TRUE(trades.empty());
     std::optional<double> best_bid = book_->best_bid();
@@ -67,21 +67,21 @@ TEST_F(OrderBookTest, PlaceSimpleSellOrder)
 
 TEST_F(OrderBookTest, FullMatchBuyOrder)
 {
-    Order sell_order = CreateSellOrder(50.0, 100);
+    Order sell_order = createSellOrder(50.0, 100);
     std::vector<Trade> trades_sell = book_->place_order(sell_order);
-    Order buy_order = CreateBuyOrder(50.0, 100, "testclient2");
+    Order buy_order = createBuyOrder(50.0, 100, "testclient2");
     std::vector<Trade> trades_buy = book_->place_order(buy_order);
     EXPECT_EQ(trades_buy.size(), 1);
     Trade trade = trades_buy.at(0);
-    VerifyTrade(trade, 2, 1, 50, 100);
+    verifyTrade(trade, 2, 1, 50, 100);
     EXPECT_EQ(book_->best_bid(), std::nullopt);
     EXPECT_EQ(book_->best_ask(), std::nullopt);
 }
 
 TEST_F(OrderBookTest, PartialMatchBuyOrder)
 {
-    Order sell_order = CreateSellOrder(50.0, 50);
-    Order buy_order = CreateBuyOrder(50.0, 100, "testclient2");
+    Order sell_order = createSellOrder(50.0, 50);
+    Order buy_order = createBuyOrder(50.0, 100, "testclient2");
     std::vector<Trade> sell_trades = book_->place_order(sell_order);
     std::vector<Trade> buy_trades = book_->place_order(buy_order);
     EXPECT_EQ(buy_trades.size(), 1);
@@ -92,13 +92,13 @@ TEST_F(OrderBookTest, PartialMatchBuyOrder)
 
 TEST_F(OrderBookTest, MultiplePartialMatches)
 {
-    Order sell_order1 = CreateSellOrder(50.0, 30);
-    Order sell_order2 = CreateSellOrder(50.0, 40);
-    Order sell_order3 = CreateSellOrder(50.0, 50);
+    Order sell_order1 = createSellOrder(50.0, 30);
+    Order sell_order2 = createSellOrder(50.0, 40);
+    Order sell_order3 = createSellOrder(50.0, 50);
     std::vector<Trade> sell_trade1 = book_->place_order(sell_order1);
     std::vector<Trade> sell_trade2 = book_->place_order(sell_order2);
     std::vector<Trade> sell_trade3 = book_->place_order(sell_order3);
-    Order buy_order = CreateBuyOrder(50.0, 100, "testclient2");
+    Order buy_order = createBuyOrder(50.0, 100, "testclient2");
     std::vector<Trade> buy_trade = book_->place_order(buy_order);
     EXPECT_EQ(buy_trade.size(), 3);
     EXPECT_EQ(book_->get_qty(50.00, Side::Sell), 20);
@@ -113,13 +113,13 @@ TEST_F(OrderBookTest, MultiplePartialMatches)
 
 TEST_F(OrderBookTest, PriceLevelMatching)
 {
-    Order sell_order1 = CreateSellOrder(50.0, 50);
-    Order sell_order2 = CreateSellOrder(51.0, 50);
-    Order sell_order3 = CreateSellOrder(52.0, 50);
+    Order sell_order1 = createSellOrder(50.0, 50);
+    Order sell_order2 = createSellOrder(51.0, 50);
+    Order sell_order3 = createSellOrder(52.0, 50);
     std::vector<Trade> sell_trade1 = book_->place_order(sell_order1);
     std::vector<Trade> sell_trade2 = book_->place_order(sell_order2);
     std::vector<Trade> sell_trade3 = book_->place_order(sell_order3);
-    Order buy_order = CreateBuyOrder(52.0, 150, "testclient2");
+    Order buy_order = createBuyOrder(52.0, 150, "testclient2");
     std::vector<Trade> buy_trade = book_->place_order(buy_order);
     EXPECT_EQ(buy_trade.size(), 3);
     EXPECT_EQ(buy_trade.at(0).price, 50.00);

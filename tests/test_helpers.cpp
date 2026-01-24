@@ -8,17 +8,17 @@
 #include <sstream>
 #include "test_helpers.hpp"
 
-Order CreateBuyOrder(double price, uint64_t qty, const std::string &client)
+Order createBuyOrder(double price, uint64_t qty, const std::string &client)
 {
     return Order(-1, client, Side::Buy, price, qty, qty, std::chrono::system_clock::now());
 }
 
-Order CreateSellOrder(double price, uint64_t qty, const std::string &client)
+Order createSellOrder(double price, uint64_t qty, const std::string &client)
 {
     return Order(-1, client, Side::Sell, price, qty, qty, std::chrono::system_clock::now());
 }
 
-void VerifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell,
+void verifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell,
                  double expected_price, uint64_t expected_qty)
 {
     EXPECT_EQ(trade.buy_order, expected_buy);
@@ -28,7 +28,7 @@ void VerifyTrade(const Trade &trade, OrderId expected_buy, OrderId expected_sell
 }
 
 // Helper: Count lines in CSV file
-int CountCSVLines(const std::string &filename)
+int countCSVLines(const std::string &filename)
 {
     // TODO: Open file, count lines, return count
     std::ifstream file(filename);
@@ -42,7 +42,7 @@ int CountCSVLines(const std::string &filename)
 }
 
 // Helper: Parse CSV line into Trade struct
-Trade ParseCSVLine(const std::string &line)
+Trade parseCSVLine(const std::string &line)
 {
     // TODO: Split by comma, parse fields, return Trade
     // This is more complex - you'll need to parse:
@@ -53,7 +53,7 @@ Trade ParseCSVLine(const std::string &line)
 }
 
 // Helper: Read entire CSV file into vector of trades
-std::vector<Trade> ReadAllTrades(const std::string &filename)
+std::vector<Trade> readAllTrades(const std::string &filename)
 {
     // TODO: Open file, skip header, parse each line
     std::vector<Trade> trades;
