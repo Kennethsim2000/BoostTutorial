@@ -2,6 +2,7 @@
 #include <fstream>
 #include <mutex>
 #include "types.hpp"
+#include <iostream>
 
 class CSVLogger
 {
@@ -23,6 +24,7 @@ public:
         { // tellP is used to obtain the position of write pointer
             // this means if the output file stream is empty
             ofs_ << "timestamp_ms, buy_order, sell_order, price, qty\n";
+            ofs_.flush();
         }
     }
     void log_trade(const Trade &t)

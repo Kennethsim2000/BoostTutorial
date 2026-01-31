@@ -17,13 +17,12 @@ protected:
     void SetUp() override
     {
         test_filename_ = "test_logger.csv";
-        // TODO: Remove test file if it exists from previous test
-        // Hint: std::filesystem::remove(test_filename_);
+        std::filesystem::remove(test_filename_);
     }
 
     void TearDown() override
     {
-        // TODO: Remove test file
+        // std::filesystem::remove(test_filename_);
     }
 
     std::string test_filename_;
@@ -31,15 +30,24 @@ protected:
 
 TEST_F(CSVLoggerTest, CreateNewLogFile)
 {
-    // Test: Logger creates new file with header
-    // TODO: Create CSVLogger with test filename
-    // TODO: Verify file exists using std::filesystem::exists()
-    // TODO: Open file and read first line
-    // TODO: Verify first line is the CSV header
+    CSVLogger logger(test_filename_);
+    std::filesystem::exists(test_filename_);
+    std::ifstream file(test_filename_);
+    if (file.is_open())
+    {
+        file.seekg(0, std::ios::beg);
+        auto size = file.tellg();
+        std::string firstLine;
+        std::getline(file, firstLine);
+        std::string expectedHeader = "timestamp_ms, buy_order, sell_order, price, qty";
+        EXPECT_EQ(expectedHeader, firstLine);
+    }
 }
 
 TEST_F(CSVLoggerTest, AppendToExistingFile)
 {
+    CSVLogger logger(test_filename_);
+
     // Test: Logger appends to existing file without adding header
     // TODO: Create logger, log a trade, destroy logger
     // TODO: Create new logger with same filename
