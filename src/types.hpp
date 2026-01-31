@@ -35,7 +35,14 @@ struct Trade
     uint64_t qty;
     std::chrono::system_clock::time_point ts;
 
-    Trade(OrderId buy_order_, OrderId sell_order_, double price_, uint64_t qty_, std::chrono::system_clock::time_point ts_) : buy_order(buy_order_), sell_order(sell_order_), price(price_), qty(qty_), ts(ts_) {}
+    bool operator==(const Trade &other) const // Only ONE parameter
+    {
+        return buy_order == other.buy_order && sell_order == other.sell_order && price == other.price && qty == other.qty;
+    }
+
+    Trade(OrderId buy_order_, OrderId sell_order_, double price_, uint64_t qty_, std::chrono::system_clock::time_point ts_) : buy_order(buy_order_), sell_order(sell_order_), price(price_), qty(qty_), ts(ts_)
+    {
+    }
 };
 
 struct OrderRef

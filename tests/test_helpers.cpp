@@ -72,6 +72,10 @@ std::vector<Trade> readAllTrades(const std::string &filename)
     std::string line;
     while (std::getline(file, line))
     {
+        if (line.find("timestamp_ms") != std::string::npos)
+        {
+            continue;
+        }
         Trade t = parseCSVLine(line);
         trades.push_back(t);
     }

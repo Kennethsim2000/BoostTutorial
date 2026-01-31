@@ -5,11 +5,13 @@
 
 #include <gtest/gtest.h>
 #include "csv_logger.hpp"
+#include "test_helpers.hpp"
 #include "types.hpp"
 #include <filesystem>
 #include <fstream>
 #include <thread>
 #include <vector>
+#include <string_view>
 
 class CSVLoggerTest : public ::testing::Test
 {
@@ -22,7 +24,7 @@ protected:
 
     void TearDown() override
     {
-        // std::filesystem::remove(test_filename_);
+        std::filesystem::remove(test_filename_);
     }
 
     std::string test_filename_;
@@ -46,22 +48,27 @@ TEST_F(CSVLoggerTest, CreateNewLogFile)
 
 TEST_F(CSVLoggerTest, AppendToExistingFile)
 {
+    {
+        CSVLogger logger(test_filename_);
+        Trade t1(1, 2, 50.0, 100, std::chrono::system_clock::now());
+        logger.log_trade(t1);
+    }
+    Trade t2(1, 2, 50.0, 100, std::chrono::system_clock::now());
     CSVLogger logger(test_filename_);
-
-    // Test: Logger appends to existing file without adding header
-    // TODO: Create logger, log a trade, destroy logger
-    // TODO: Create new logger with same filename
-    // TODO: Log another trade
-    // TODO: Read file and verify: 1 header + 2 trade lines
+    logger.log_trade(t2);
+    int rows = countCSVLines(test_filename_);
+    EXPECT_EQ(3, rows);
 }
 
 TEST_F(CSVLoggerTest, LogTradeFormat)
 {
-    // Test: Verify trade is logged in correct CSV format
-    // TODO: Create logger and log a sample trade
-    // TODO: Read the logged line
-    // TODO: Verify format: timestamp,buy_order,sell_order,price,qty
-    // TODO: Verify values are correct
+    CSVLogger logger(test_filename_);
+    Trade t1(1, 2, 50.0, 100, std::chrono::system_clock::now());
+    logger.log_trade(t1);
+    std::vector<Trade> trades = readAllTrades(test_filename_);
+    EXPECT_EQ(1, trades.size());
+    Trade tradeRecorded = trades.at(0);
+    EXPECT_TRUE(t1 == tradeRecorded);
 }
 
 TEST_F(CSVLoggerTest, ConcurrentLogging)
