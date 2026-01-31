@@ -73,19 +73,46 @@ TEST_F(CSVLoggerTest, LogTradeFormat)
 
 TEST_F(CSVLoggerTest, ConcurrentLogging)
 {
-    // Test: Multiple threads logging simultaneously
-    // TODO: Create logger
-    // TODO: Create 10 threads, each logging 100 trades
-    // TODO: Join threads
-    // TODO: Count lines in file
-    // TODO: Verify file has exactly 1000 trade lines (no lost writes)
+    CSVLogger logger(test_filename_);
+    std::vector<std::thread> threads;
+    auto lambda_func = [&]()
+    {
+        Trade t1(1, 2, 50.0, 100, std::chrono::system_clock::now());
+        for (int i = 0; i < 100; i++)
+        {
+            logger.log_trade(t1);
+        }
+    };
+    for (int i = 0; i < 10; i++)
+    {
+        threads.emplace_back(lambda_func);
+    }
+    for (auto &t : threads)
+    {
+        t.join();
+    }
+    int rows = countCSVLines(test_filename_);
+    EXPECT_EQ(1001, rows);
 }
 
 TEST_F(CSVLoggerTest, LogMultipleTrades)
 {
-    // Test: Log multiple trades sequentially
-    // TODO: Create logger
-    // TODO: Log 5 different trades
-    // TODO: Read file and verify all 5 trades are present
-    // TODO: Verify order of trades in file
+    CSVLogger logger(test_filename_);
+    Trade t1(1, 2, 50.0, 100, std::chrono::system_clock::now());
+    Trade t2(2, 3, 50.0, 100, std::chrono::system_clock::now());
+    Trade t3(3, 4, 50.0, 100, std::chrono::system_clock::now());
+    Trade t4(4, 5, 50.0, 100, std::chrono::system_clock::now());
+    Trade t5(6, 7, 50.0, 100, std::chrono::system_clock::now());
+    std::vector<Trade> trades = {t1, t2, t3, t4, t5};
+    for (auto trade : trades)
+    {
+        logger.log_trade(trade);
+    }
+    int rows = countCSVLines(test_filename_);
+    EXPECT_EQ(6, rows);
+    std::vector<Trade> recordedTrades = readAllTrades(test_filename_);
+    for (int i = 0; i < trades.size(); i++)
+    {
+        EXPECT_TRUE(trades[i] == recordedTrades[i]);
+    }
 }
