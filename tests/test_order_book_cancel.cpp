@@ -49,26 +49,27 @@ TEST_F(OrderCancelTest, CancelExistingOrder)
 
 TEST_F(OrderCancelTest, CancelNonExistentOrder)
 {
-    // Test: Attempt to cancel an order that doesn't exist
-    // TODO: Call cancel_order(99999) with invalid ID
-    // TODO: Verify cancel returns false
+    const Order buy_order = createBuyOrder(50.00, 100);
+    std::vector<Trade> trades = book_->place_order(buy_order);
+    EXPECT_FALSE(book_->cancel_order(2)) << "Order book cannot cancel an orderId that does not exist";
+    EXPECT_TRUE(book_->best_bid().has_value()) << "No buy_order should be in bids after cancel";
 }
 
 TEST_F(OrderCancelTest, CancelPartiallyFilledOrder)
 {
-    // Test: Cancel an order that was partially filled
-    // TODO: Place sell order for 100 @ $50
-    // TODO: Place buy order for 60 @ $50 (partially fills sell order)
-    // TODO: Cancel the remaining sell order (40 shares)
-    // TODO: Verify cancellation succeeds
-    // TODO: Verify best_ask() becomes nullopt
+    const Order sell_order = createSellOrder(50.0, 100, "TestClient2");
+    std::vector<Trade> trades_sell = book_->place_order(sell_order);
+    const Order buy_order = createBuyOrder(50.00, 60);
+    std::vector<Trade> trades = book_->place_order(buy_order);
+    EXPECT_TRUE(book_->cancel_order(1)) << "Partially filled sell order can be cancelled";
+    EXPECT_FALSE(book_->best_ask().has_value()) << "No sell order should be in bids after cancel";
 }
 
 TEST_F(OrderCancelTest, CancelAfterFullMatch)
 {
-    // Test: Try to cancel an order that was fully matched
-    // TODO: Place sell order, capture ID
-    // TODO: Place matching buy order (fully executes sell)
-    // TODO: Try to cancel the sell order ID
-    // TODO: Verify cancel returns false (order no longer exists)
+    const Order sell_order = createSellOrder(50.0, 100, "TestClient2");
+    std::vector<Trade> trades_sell = book_->place_order(sell_order);
+    const Order buy_order = createBuyOrder(50.00, 100);
+    std::vector<Trade> trades = book_->place_order(buy_order);
+    EXPECT_FALSE(book_->cancel_order(1)) << "Unable to cancel fully filled order";
 }
