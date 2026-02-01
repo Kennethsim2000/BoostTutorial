@@ -8,31 +8,43 @@
 #include "csv_logger.hpp"
 #include "types.hpp"
 #include <filesystem>
+#include "test_helpers.hpp"
 
 class OrderCancelTest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
-        // TODO: Initialize logger and order book
-        // Hint: Use filename "test_trades_cancel.csv"
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
+        logger_ = std::make_unique<CSVLogger>(test_filename_);
+        book_ = std::make_unique<OrderBook>(*logger_);
     }
 
     void TearDown() override
     {
-        // TODO: Cleanup
+        book_.reset();
+        logger_.reset();
+
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
     }
 
-    // TODO: Declare logger_ and book_
+    std::string test_filename_ = "test_trades_cancel.csv";
+    std::unique_ptr<CSVLogger> logger_;
+    std::unique_ptr<OrderBook> book_;
 };
 
 TEST_F(OrderCancelTest, CancelExistingOrder)
 {
-    // Test: Successfully cancel an order in the book
-    // TODO: Place an order and capture its ID
-    // TODO: Call cancel_order(id)
-    // TODO: Verify cancel returns true
-    // TODO: Verify the order is removed from best_bid/ask
+    const Order buy_order = createBuyOrder(50.00, 100);
+    std::vector<Trade> trades = book_->place_order(buy_order);
+    EXPECT_TRUE(book_->cancel_order(1));
+    EXPECT_FALSE(book_->best_bid().has_value()) << "No buy_order should be in bids after cancel";
 }
 
 TEST_F(OrderCancelTest, CancelNonExistentOrder)

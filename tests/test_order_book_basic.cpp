@@ -164,7 +164,7 @@ TEST_F(OrderBookTest, PriceLevelMatching)
     EXPECT_EQ(buy_trade.at(1).price, 51.00);
     EXPECT_EQ(buy_trade.at(2).price, 52.00);
 
-    for (const auto &trade : buy_trades)
+    for (const auto &trade : buy_trade)
     {
         EXPECT_EQ(50, trade.qty);
     }
