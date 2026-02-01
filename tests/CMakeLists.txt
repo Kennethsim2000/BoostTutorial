@@ -1,7 +1,7 @@
 find_package(GTest REQUIRED) # tell CMAKE to find googleTest, add its include directories, link against it
 
 # Basic test
-add_executable(test_basic test_order_book_basic.cpp test_csv_logger.cpp test_order_book_cancel.cpp test_helpers.cpp)
+add_executable(test_basic test_order_book_basic.cpp test_csv_logger.cpp test_order_book_cancel.cpp test_performance.cpp test_helpers.cpp)
 target_link_libraries(test_basic
     PRIVATE 
     trader_core

@@ -9,33 +9,52 @@
 #include "types.hpp"
 #include <chrono>
 #include <filesystem>
+#include "test_helpers.hpp"
 
 class PerformanceTest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
-        // TODO: Setup logger and order book
-        // Hint: Use filename "test_trades_perf.csv"
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
+        logger_ = std::make_unique<CSVLogger>(test_filename_);
+        book_ = std::make_unique<OrderBook>(*logger_);
     }
 
     void TearDown() override
     {
-        // TODO: Cleanup
+        book_.reset();
+        logger_.reset();
+
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
     }
 
-    // TODO: Declare components
+    std::string test_filename_ = "test_trades_perf.csv";
+    std::unique_ptr<CSVLogger> logger_;
+    std::unique_ptr<OrderBook> book_;
 };
 
 TEST_F(PerformanceTest, HighVolumeOrders)
 {
-    // Test: System handles high volume of orders
-    // TODO: Start timer
-    // TODO: Place 10,000 orders alternating buy/sell
-    // TODO: Stop timer
-    // TODO: Calculate orders per second
-    // TODO: Verify reasonable performance (define your threshold)
-    // Example: EXPECT_GT(orders_per_sec, 10000);
+    constexpr int NUM_ORDERS = 10000;
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < NUM_ORDERS; i++)
+    {
+        Side side = (i % 2 == 0) ? Side::Buy : Side::Sell;
+        const Order order = side == Side::Buy ? createBuyOrder(50.00, 100) : createSellOrder(50.0, 100, "TestClient2");
+        std::vector<Trade> trades = book_->place_order(order);
+    }
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    double seconds = duration.count() / 1000000.0;
+    double orders_per_sec = NUM_ORDERS / seconds;
+    EXPECT_GT(orders_per_sec, 10000);
 }
 
 TEST_F(PerformanceTest, DeepOrderBook)
