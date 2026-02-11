@@ -18,21 +18,28 @@ protected:
     {
         // TODO: Set up complete system with logger and order book
         // Hint: Use filename "test_trades_integration.csv"
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
+        logger_ = std::make_unique<CSVLogger>(test_filename_);
+        book_ = std::make_unique<OrderBook>(*logger_);
     }
 
     void TearDown() override
     {
-        // TODO: Cleanup
+        book_.reset();
+        logger_.reset();
+
+        if (std::filesystem::exists(test_filename_))
+        {
+            std::filesystem::remove(test_filename_);
+        }
     }
 
-    // TODO: Declare components
-
-    // Helper function to count trades in CSV
-    int CountTradesInCSV(const std::string &filename)
-    {
-        // TODO: Open file, count lines (excluding header)
-        return 0;
-    }
+    std::string test_filename_ = "test_trades_integration.csv";
+    std::unique_ptr<CSVLogger> logger_;
+    std::unique_ptr<OrderBook> book_;
 };
 
 TEST_F(IntegrationTest, OrderToTradeToLog)
