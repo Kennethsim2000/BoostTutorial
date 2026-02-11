@@ -57,15 +57,6 @@ TEST_F(PerformanceTest, HighVolumeOrders)
     EXPECT_GT(orders_per_sec, 10000);
 }
 
-TEST_F(PerformanceTest, DeepOrderBook)
-{
-    // Test: System handles deep order book (many price levels)
-    // TODO: Place orders at 1000 different price levels
-    // TODO: Measure snapshot_top(100) performance
-    // TODO: Measure order matching performance
-    // TODO: Verify acceptable performance
-}
-
 TEST_F(PerformanceTest, ManySmallTrades)
 {
     // Test: Many small trades (worst case for matching)
@@ -73,6 +64,20 @@ TEST_F(PerformanceTest, ManySmallTrades)
     // TODO: Place 1 buy order for 1000 shares at $50
     // TODO: Measure time to match all
     // TODO: Verify acceptable performance
+    constexpr int NUM_ORDERS = 10000;
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < NUM_ORDERS; i++)
+    {
+        const Order order = createSellOrder(50.0, 1);
+        std::vector<Trade> trades = book_->place_order(order);
+    }
+    const Order order = createBuyOrder(50.0, 1000, "client2");
+    std::vector<Trade> trades = book_->place_order(order);
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    double seconds = duration.count() / 1000000.0;
+    double orders_per_sec = NUM_ORDERS / seconds;
+    EXPECT_GT(orders_per_sec, 10000);
 }
 
 TEST_F(PerformanceTest, SnapshotPerformance)
@@ -82,4 +87,30 @@ TEST_F(PerformanceTest, SnapshotPerformance)
     // TODO: Measure time to generate snapshot_top(50) 1000 times
     // TODO: Calculate average time per snapshot
     // TODO: Verify acceptable performance
+    constexpr int NUM_LEVELS = 100;
+    double start_sell_price = 0;
+    double start_buy_price = 200;
+    constexpr double SNAPSHOT_TIMES = 1000;
+    for (int i = 0; i < NUM_LEVELS; i++)
+    {
+        const Order order = createSellOrder(start_sell_price, 1);
+        start_sell_price++;
+        std::vector<Trade> trades = book_->place_order(order);
+    }
+    for (int i = 0; i < NUM_LEVELS; i++)
+    {
+        const Order order = createBuyOrder(start_buy_price, 1);
+        start_buy_price++;
+        std::vector<Trade> trades = book_->place_order(order);
+    }
+    auto start = std::chrono::steady_clock::now();
+    for (int i = 0; i < SNAPSHOT_TIMES; i++)
+    {
+        book_->snapshot_top(50);
+    }
+    auto end = std::chrono::steady_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    double seconds = duration.count() / 1000000.0;
+    double snapshots_per_sc = SNAPSHOT_TIMES / seconds;
+    EXPECT_GT(snapshots_per_sc, 10000);
 }

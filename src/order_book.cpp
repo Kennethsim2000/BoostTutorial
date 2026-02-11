@@ -96,11 +96,6 @@ std::vector<Trade> OrderBook::match_buy(Order &incoming)
 // ------------------------------------------------------------
 std::vector<Trade> OrderBook::match_sell(Order &incoming)
 {
-    // TODO:
-    // Same logic as match_buy but using:
-    //   - best bid = bids_.rbegin()
-    //   - price condition reversed
-
     std::vector<Trade> trades;
     while (incoming.qty > 0)
     {
