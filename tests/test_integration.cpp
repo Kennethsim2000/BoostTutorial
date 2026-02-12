@@ -10,14 +10,13 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include "test_helpers.hpp"
 
 class IntegrationTest : public ::testing::Test
 {
 protected:
     void SetUp() override
     {
-        // TODO: Set up complete system with logger and order book
-        // Hint: Use filename "test_trades_integration.csv"
         if (std::filesystem::exists(test_filename_))
         {
             std::filesystem::remove(test_filename_);
@@ -49,17 +48,16 @@ TEST_F(IntegrationTest, OrderToTradeToLog)
     // TODO: Verify trade is created in return value
     // TODO: Read CSV file
     // TODO: Verify trade is logged with correct details
-}
+    const Order sell_order = createSellOrder(50.0, 100);
+    std::vector<Trade> trades_sell = book_->place_order(sell_order);
 
-TEST_F(IntegrationTest, ComplexTradingScenario)
-{
-    // Test: Simulate realistic trading scenario
-    // TODO: Place multiple buy orders building up bid side
-    // TODO: Place multiple sell orders building up ask side
-    // TODO: Place aggressive orders that cross the spread
-    // TODO: Cancel some orders
-    // TODO: Take snapshot and verify book state
-    // TODO: Verify all trades logged correctly
+    const Order buy_order = createBuyOrder(50.0, 100, "testclient2");
+    std::vector<Trade> trades_buy = book_->place_order(buy_order);
+    EXPECT_EQ(trades_buy.size(), 1) << "Should generate exactly one trade";
+    int rows = countCSVLines(test_filename_);
+    EXPECT_EQ(rows, 2) << "Should log one trade in CSV";
+    std::vector<Trade> recordedTrades = readAllTrades(test_filename_);
+    EXPECT_EQ(recordedTrades[0], trades_buy[0]) << "Trade recorded should be equal to trade returned to client";
 }
 
 TEST_F(IntegrationTest, MarketOrderSimulation)
@@ -70,6 +68,18 @@ TEST_F(IntegrationTest, MarketOrderSimulation)
     // TODO: Verify it sweeps through all three levels
     // TODO: Verify 3 trades created at correct prices
     // TODO: Verify all trades logged to CSV
+    const Order sell_order1 = createSellOrder(50.0, 100);
+    const Order sell_order2 = createSellOrder(51.0, 100);
+    const Order sell_order3 = createSellOrder(52.0, 100);
+    std::vector<Trade> trades_sell = book_->place_order(sell_order1);
+    std::vector<Trade> trades_sell2 = book_->place_order(sell_order2);
+    std::vector<Trade> trades_sell3 = book_->place_order(sell_order3);
+
+    const Order buy_order = createBuyOrder(100.0, 250, "testclient2");
+    std::vector<Trade> trades_buy = book_->place_order(buy_order);
+    EXPECT_EQ(trades_buy.size(), 3) << "Should generate three trades";
+    int rows = countCSVLines(test_filename_);
+    EXPECT_EQ(rows, 4) << "Should log three trade in CSV";
 }
 
 TEST_F(IntegrationTest, PartialFillsAndLogging)
@@ -81,4 +91,16 @@ TEST_F(IntegrationTest, PartialFillsAndLogging)
     // TODO: Place another buy for 30 @ $50
     // TODO: Verify another trade logged for 30 shares
     // TODO: Verify CSV has 2 separate trade entries
+    const Order sell_order = createSellOrder(50.0, 100);
+    book_->place_order(sell_order);
+    const Order buy_order = createBuyOrder(50.0, 60, "testclient2");
+    book_->place_order(buy_order);
+    std::vector<Trade> recordedTrades = readAllTrades(test_filename_);
+    EXPECT_EQ(recordedTrades.size(), 1) << "One trade logged";
+    EXPECT_EQ(recordedTrades[0].qty, 60) << "Trade logged for 60 shares";
+    const Order buy_order2 = createBuyOrder(50.0, 30, "testclient2");
+    book_->place_order(buy_order2);
+    std::vector<Trade> recordedTrades2 = readAllTrades(test_filename_);
+    EXPECT_EQ(recordedTrades2.size(), 2) << "Two trades logged";
+    EXPECT_EQ(recordedTrades2[1].qty, 30) << "Second trade logged for 30 shares";
 }
