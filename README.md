@@ -11,6 +11,15 @@ cmake ..
 make
 ```
 
+To run with thread sanitiser
+
+```bash
+mkdir build
+cd build
+cmake -DENABLE_TSAN=ON -DCMAKE_CXX_COMPILER=clang++ ..
+make
+```
+
 To run the TCP Server:
 
 ```bash
